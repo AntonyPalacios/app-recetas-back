@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.http import HttpResponse, JsonResponse, Http404
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -18,6 +19,7 @@ class RecipeList(APIView):
         serializer = RecipeSerializer(recipes, many=True)
         return Response(serializer.data)
 
+    @transaction.atomic
     def post(self, request):
         serializer = RecipeCreateSerializer(data=request.data)
         if serializer.is_valid():

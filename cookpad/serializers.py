@@ -4,13 +4,15 @@ from cookpad.models import Recipe, Ingredient, RecipeIngredient
 
 
 class IngredientSerializer(serializers.ModelSerializer):
+    ingredientId = serializers.IntegerField(required=False)
+
     class Meta:
         model = Ingredient
         fields = ['ingredientId', 'name']
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
-    ingredient = IngredientSerializer(read_only=True)
+    ingredient = IngredientSerializer()
 
     class Meta:
         model = RecipeIngredient
@@ -18,23 +20,26 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
-    ingredients = RecipeIngredientSerializer(many=True)
+    ingredients = RecipeIngredientSerializer(many=True, required=False)
 
     class Meta:
         model = Recipe
         fields = ['recipeId', 'title', 'description', 'ingredients']
         extra_kwargs = {
-            'recipeId': {'required': False},
+            'ingredients': {'required': False},
         }
 
     def create(self, validated_data):
-        ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(
             title=validated_data['title'],
             description=validated_data['description'],
         )
+        if 'ingredients' not in validated_data:
+            return recipe
+
+        ingredients = validated_data.pop('ingredients')
         for ingredient_data in ingredients:
-            ingredient = Ingredient.objects.get(ingredientId=ingredient_data['ingredientId'])
+            ingredient = Ingredient.objects.get(ingredientId=ingredient_data['ingredient']['ingredientId'])
             RecipeIngredient.objects.create(
                 recipe=recipe,
                 ingredient=ingredient,
