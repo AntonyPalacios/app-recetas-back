@@ -11,11 +11,10 @@ class Recipe(models.Model):
     recipeId = models.AutoField(primary_key=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
-    ingredients = models.ManyToManyField(Ingredient, through='RecipeIngredient')
 
 
 class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, related_name='ingredients', on_delete=models.CASCADE)
     quantity = models.FloatField()
     unit = models.CharField(max_length=100)
