@@ -47,24 +47,17 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         recipeId = instance.recipeId
-        print(validated_data)
         instance.title = validated_data['title']
         instance.description = validated_data['description']
         ingredients = validated_data['ingredients']
+        recipeIngredients = RecipeIngredient.objects.filter(recipe_id=recipeId)
+        recipeIngredients.delete()
         for ingredient_data in ingredients:
-            try:
-                recipeIngredient = RecipeIngredient.objects.get(
-                    ingredient_id=ingredient_data['ingredient']['ingredientId'],
-                    recipe_id=recipeId)
-                recipeIngredient.quantity = ingredient_data['quantity']
-                recipeIngredient.unit = ingredient_data['unit']
-                recipeIngredient.save()
-            except RecipeIngredient.DoesNotExist:
-                RecipeIngredient.objects.create(
-                    recipe_id=recipeId,
-                    ingredient_id=ingredient_data['ingredient']['ingredientId'],
-                    quantity=ingredient_data['quantity'],
-                    unit=ingredient_data['unit']
+            RecipeIngredient.objects.create(
+                recipe_id=recipeId,
+                ingredient_id=ingredient_data['ingredient']['ingredientId'],
+                quantity=ingredient_data['quantity'],
+                unit=ingredient_data['unit']
                 )
         instance.save()
         return instance
