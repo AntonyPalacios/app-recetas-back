@@ -57,7 +57,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         existingIngredientsId = {item.ingredient_id for item in recipeIngredients}
 
         toRemove = existingIngredientsId - newIngredientsId
-        toAdd = newIngredientsId - existingIngredientsId
 
         RecipeIngredient.objects.filter(recipe_id=recipeId,ingredient_id__in=toRemove).delete()
 
