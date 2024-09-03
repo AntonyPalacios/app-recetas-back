@@ -49,15 +49,36 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipeId = instance.recipeId
         instance.title = validated_data['title']
         instance.description = validated_data['description']
-        ingredients = validated_data['ingredients']
-        recipeIngredients = RecipeIngredient.objects.filter(recipe_id=recipeId)
-        recipeIngredients.delete()
-        for ingredient_data in ingredients:
-            RecipeIngredient.objects.create(
-                recipe_id=recipeId,
-                ingredient_id=ingredient_data['ingredient']['ingredientId'],
-                quantity=ingredient_data['quantity'],
-                unit=ingredient_data['unit']
-                )
         instance.save()
+
+        ingredients = validated_data['ingredients']
+        newIngredientsId = {item['ingredient']['ingredientId'] for item in ingredients}
+        recipeIngredients = RecipeIngredient.objects.filter(recipe_id=recipeId)
+        existingIngredientsId = {item.ingredient_id for item in recipeIngredients}
+
+        toRemove = existingIngredientsId - newIngredientsId
+        toAdd = newIngredientsId - existingIngredientsId
+
+        RecipeIngredient.objects.filter(recipe_id=recipeId,ingredient_id__in=toRemove).delete()
+
+        for item in ingredients:
+            ingredient_id = item['ingredient']['ingredientId']
+            quantity = item['quantity']
+            unit = item['unit']
+
+            # Si el ingrediente ya existe, lo actualizamos
+            if ingredient_id in existingIngredientsId:
+                recipe_ingredient = recipeIngredients.get(ingredient_id=ingredient_id)
+                recipe_ingredient.quantity = quantity
+                recipe_ingredient.unit = unit
+                recipe_ingredient.save()
+            else:
+                # Si no existe, lo creamos
+                RecipeIngredient.objects.create(
+                    recipe_id=recipeId,
+                    ingredient_id=ingredient_id,
+                    quantity=quantity,
+                    unit=unit
+                )
+
         return instance

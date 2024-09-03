@@ -18,6 +18,7 @@ class IngredientListCreateAPIView(APIView):
         serializer = IngredientSerializer(ingredients, many=True)
         return Response(serializer.data)
 
+    @transaction.atomic
     def post(self, request):
         serializer = IngredientSerializer(data=request.data)
         if serializer.is_valid():
